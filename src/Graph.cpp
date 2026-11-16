@@ -6,7 +6,7 @@ void Graph::addVertex(int vertex) {
     }
 }
 
-// Add a route between two locations
+// Add or update a route
 void Graph::addEdge(int source, int destination, double distance) {
 
     if (distance < 0) {
@@ -14,28 +14,45 @@ void Graph::addEdge(int source, int destination, double distance) {
         return;
     }
 
-    // Automatically create locations if they don't exist
     addVertex(source);
     addVertex(destination);
 
-    // Check if route already exists
-    for (auto &edge : adj[source]) {
-        if (edge.first == destination) {
-            edge.second = distance;
+    // Add or update an edge without creating duplicates
+    auto addOrUpdate = [](vector<pair<int, double>>& neighbors,
+                          int neighbor, double weight) {
 
-            for (auto &reverseEdge : adj[destination]) {
-                if (reverseEdge.first == source) {
-                    reverseEdge.second = distance;
-                    return;
+        bool found = false;
+
+        for (auto it = neighbors.begin(); it != neighbors.end();) {
+
+            if (it->first == neighbor) {
+
+                if (!found) {
+                    it->second = weight;
+                    found = true;
+                    ++it;
+                } else {
+                    it = neighbors.erase(it);
                 }
+
+            } else {
+                ++it;
             }
         }
-    }
 
-    // Add route in both directions
-    adj[source].push_back({destination, distance});
-    adj[destination].push_back({source, distance});
+        if (!found) {
+            neighbors.push_back({neighbor, weight});
+        }
+    };
+
+    addOrUpdate(adj[source], destination, distance);
+
+    // A self-loop should appear only once
+    if (source != destination) {
+        addOrUpdate(adj[destination], source, distance);
+    }
 }
+
 // Remove a location
 void Graph::removeVertex(int vertex) {
 
@@ -43,9 +60,8 @@ void Graph::removeVertex(int vertex) {
         return;
     }
 
-    // Remove all connections to this location
-    for (auto &entry : adj) {
-        vector<pair<int, double>> &neighbors = entry.second;
+    for (auto& entry : adj) {
+        vector<pair<int, double>>& neighbors = entry.second;
 
         for (auto it = neighbors.begin(); it != neighbors.end();) {
             if (it->first == vertex) {
@@ -56,7 +72,6 @@ void Graph::removeVertex(int vertex) {
         }
     }
 
-    // Remove the location itself
     adj.erase(vertex);
 }
 
@@ -67,51 +82,52 @@ void Graph::removeEdge(int source, int destination) {
         return;
     }
 
-    // Remove source -> destination
-    auto &neighbors1 = adj[source];
+    auto removeConnection = [](vector<pair<int, double>>& neighbors,
+                               int neighbor) {
 
-    for (auto it = neighbors1.begin(); it != neighbors1.end();) {
-        if (it->first == destination) {
-            it = neighbors1.erase(it);
-        } else {
-            ++it;
+        for (auto it = neighbors.begin(); it != neighbors.end();) {
+            if (it->first == neighbor) {
+                it = neighbors.erase(it);
+            } else {
+                ++it;
+            }
         }
-    }
+    };
 
-    // Remove destination -> source
-    auto &neighbors2 = adj[destination];
+    removeConnection(adj[source], destination);
 
-    for (auto it = neighbors2.begin(); it != neighbors2.end();) {
-        if (it->first == source) {
-            it = neighbors2.erase(it);
-        } else {
-            ++it;
-        }
+    if (source != destination) {
+        removeConnection(adj[destination], source);
     }
 }
-// Get all neighbouring locations
-vector<pair<int, double>> Graph::getNeighbors(int vertex) {
 
-    if (!hasVertex(vertex)) {
+// Get all neighbouring locations
+vector<pair<int, double>> Graph::getNeighbors(int vertex) const {
+
+    auto it = adj.find(vertex);
+
+    if (it == adj.end()) {
         return {};
     }
 
-    return adj[vertex];
+    return it->second;
 }
 
 // Check whether a location exists
-bool Graph::hasVertex(int vertex) {
+bool Graph::hasVertex(int vertex) const {
     return adj.find(vertex) != adj.end();
 }
 
 // Check whether a route exists
-bool Graph::hasEdge(int source, int destination) {
+bool Graph::hasEdge(int source, int destination) const {
 
-    if (!hasVertex(source) || !hasVertex(destination)) {
+    auto it = adj.find(source);
+
+    if (it == adj.end()) {
         return false;
     }
 
-    for (const auto &edge : adj[source]) {
+    for (const auto& edge : it->second) {
         if (edge.first == destination) {
             return true;
         }
@@ -121,11 +137,11 @@ bool Graph::hasEdge(int source, int destination) {
 }
 
 // Get all location IDs
-vector<int> Graph::getVertices() {
+vector<int> Graph::getVertices() const {
 
     vector<int> vertices;
 
-    for (const auto &entry : adj) {
+    for (const auto& entry : adj) {
         vertices.push_back(entry.first);
     }
 
@@ -133,13 +149,15 @@ vector<int> Graph::getVertices() {
 }
 
 // Get distance between two connected locations
-double Graph::getEdgeWeight(int source, int destination) {
+double Graph::getEdgeWeight(int source, int destination) const {
 
-    if (!hasVertex(source) || !hasVertex(destination)) {
+    auto it = adj.find(source);
+
+    if (it == adj.end()) {
         return -1;
     }
 
-    for (const auto &edge : adj[source]) {
+    for (const auto& edge : it->second) {
         if (edge.first == destination) {
             return edge.second;
         }

@@ -27,19 +27,19 @@ public:
     void removeEdge(int source, int destination);
 
     // Get all neighbouring locations
-    vector<pair<int, double>> getNeighbors(int vertex);
+    vector<pair<int, double>> getNeighbors(int vertex) const;
 
     // Check whether a location exists
-    bool hasVertex(int vertex);
+    bool hasVertex(int vertex) const;
 
     // Check whether a route exists
-    bool hasEdge(int source, int destination);
+    bool hasEdge(int source, int destination) const;
 
     // Get all location IDs
-    vector<int> getVertices();
+    vector<int> getVertices() const;
 
     // Get the distance between two connected locations
-    double getEdgeWeight(int source, int destination);
+    double getEdgeWeight(int source, int destination) const;
 };
 
 #endif
