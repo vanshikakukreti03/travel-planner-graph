@@ -23,7 +23,7 @@ int main()
     graph.addEdge(2, 3, 3);
 
     int source = 1;
-    int destination = 10;
+    int destination = 3;
 
     // Find shortest path
     DijkstraResult result =
