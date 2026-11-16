@@ -10,7 +10,7 @@
 
 using namespace std;
 
-DijkstraResult findShortestPath(Graph& graph, int source, int destination)
+DijkstraResult findShortestPath(const Graph& graph, int source, int destination)
 {
     DijkstraResult result;
 
@@ -108,6 +108,11 @@ DijkstraResult findShortestPath(Graph& graph, int source, int destination)
 
     while (current != source)
     {
+        if (parent.find(current) == parent.end())
+        {
+            return result;
+        }
+
         path.push_back(current);
         current = parent[current];
     }

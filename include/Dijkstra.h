@@ -12,6 +12,6 @@ struct DijkstraResult
     double totalDistance;
 };
 
-DijkstraResult findShortestPath(Graph& graph, int source, int destination);
+DijkstraResult findShortestPath(const Graph& graph, int source, int destination);
 
 #endif
