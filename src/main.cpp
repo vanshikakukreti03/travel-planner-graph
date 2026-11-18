@@ -1,7 +1,8 @@
-
+#ifdef _WIN32
 #define NOMINMAX
 #include <winsock2.h>
 #include <windows.h>
+#endif
 
 #include "httplib.h"
 #include "nlohmann/json.hpp"
@@ -16,6 +17,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cmath>
+#include <cstdlib>
 
 using namespace std;
 using json = nlohmann::json;
@@ -359,7 +361,10 @@ int main() {
     cout << "Travel Planner server is running!" << endl;
     cout << "Open http://localhost:8080 in your browser." << endl;
 
-    if (!server.listen("127.0.0.1", 8080)) {
+    const char* portEnv = std::getenv("PORT");
+    int port = portEnv ? std::stoi(portEnv) : 8080;
+
+    if (!server.listen("0.0.0.0", port)) {
         cerr << "Could not start the server on port 8080." << endl;
         return 1;
     }
